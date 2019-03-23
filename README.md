@@ -11,26 +11,26 @@ Using Chigaziko you can work with EJB using methos of POJO.
 ## Sample of chigadziko using
 
 
-@EJB
-private SomeClassManager someClassManager;
+    @EJB
+    private SomeClassManager someClassManager;
 
-@Before
-void tearUp() {
-  // Initialize all EJB fields and create Persistence context
-  Chigadziko.makeEJBContext(this);
-}
+    @Before
+    void tearUp() {
+      // Initialize all EJB fields and create Persistence context
+      Chigadziko.makeEJBContext(this);
+    }
 
-@After
-void tearUp() {
-  // Clear all EJB context fcreatet in before method
-  Chigadziko.shutdownEJBContext(this);
-}
+    @After
+    void tearUp() {
+      // Clear all EJB context fcreatet in before method
+      Chigadziko.shutdownEJBContext(this);
+    }
 
-@Test
-void t000test1() {
-  // Here all EJB field are initialized, you can use and test them
-  someClassManager.someVoid();
-}
+    @Test
+    void t000test1() {
+      // Here all EJB field are initialized, you can use and test them
+      someClassManager.someVoid();
+    }
 
 
 
