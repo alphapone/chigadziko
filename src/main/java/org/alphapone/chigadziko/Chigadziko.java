@@ -17,7 +17,59 @@ import java.util.*;
  */
 public class Chigadziko {
 
-    private static void makePersistenceContext(Map<String,EntityManager> ems, Object... lo)
+
+    /**
+     * Search all classes related with speicfied
+     * @param clazz
+     * @return
+     */
+    private static Set<Class> listUsable(Class clazz) {
+        Set<Class> retval = new HashSet<>();
+        fillClassTree(clazz, retval);
+        return retval;
+    }
+
+    /**
+     * Loads all clasess related with specified using recusrion with visited nodes checking
+     * @param clazz
+     * @param processed
+     */
+    private static void fillClassTree(Class clazz, Set<Class> processed) {
+        Set<Class> cls = new HashSet<>();
+        for (Field f: clazz.getDeclaredFields()) {
+            Class ft = f.getType();
+            cls.add(ft);
+            Type gt = f.getGenericType();
+            if(gt instanceof ParameterizedType){
+                ParameterizedType aType = (ParameterizedType) gt;
+                Type[] fieldArgTypes = aType.getActualTypeArguments();
+                for(Type fieldArgType : fieldArgTypes){
+                    if (fieldArgType.getTypeName()!=null) {
+                        try {
+                            cls.add(Class.forName(fieldArgType.getTypeName()));
+                        } catch (Exception e) {
+
+                        }
+                    }
+                }
+            }
+        }
+
+        for (Method m: clazz.getMethods()) {
+            cls.add(m.getReturnType());
+        }
+
+        for (Class dc:cls) {
+            if (dc!=null) {
+                if (!processed.contains(dc)) {
+                    processed.add(dc);
+                    fillClassTree(dc,processed);
+                }
+            }
+        }
+    }
+
+    private static void makePersistenceContextWorker(Map<String,EntityManager> ems, Object... lo)
         throws IllegalAccessException
     {
         Set<Class> cls = new HashSet<>();
@@ -50,12 +102,12 @@ public class Chigadziko {
         throws IllegalAccessException
     {
         Map<String, EntityManager> co = new HashMap<>();
-        makePersistenceContext(co, lo);
+        makePersistenceContextWorker(co, lo);
     }
 
     /**
      * Set up all @PersistenceContext properties AND @EJB properties of specified object list (slower than makePersistenceContext)
-     * @param lo list of objects for context creation
+     * @param lo
      * @throws IllegalAccessException
      * @throws InstantiationException
      * @throws NoSuchMethodException
@@ -65,6 +117,12 @@ public class Chigadziko {
     public static void makeEjbContext(Object... lo)
         throws IllegalAccessException, InstantiationException, NoSuchMethodException, InvocationTargetException
     {
+        makeEjbContextWorker(new HashMap<>(), lo);
+    }
+
+    public static void makeEjbContextWorker(Map<Class,Object> clm, Object... lo)
+            throws IllegalAccessException, InstantiationException, NoSuchMethodException, InvocationTargetException
+    {
         Map<String,EntityManager> ems = new HashMap<>();
         for (Object o:lo) {
             for (Field f : o.getClass().getDeclaredFields()) {
@@ -73,9 +131,13 @@ public class Chigadziko {
                     f.setAccessible(true);
                     if (f.get(o) == null) {
                         Class cla = f.getType();
-                        Object fo = cla.getConstructor().newInstance();
-                        f.set(o,fo);
-                        makePersistenceContext(ems,f.get(o));
+                        if (!clm.containsKey(cla)) {
+                            Object fo = cla.getConstructor().newInstance();
+                            clm.put(cla,fo);
+                            makeEjbContextWorker(clm,fo);
+                            makePersistenceContext(ems, fo);
+                        }
+                        f.set(o,clm.get(cla));
                     }
                 }
             }
@@ -83,15 +145,12 @@ public class Chigadziko {
     }
 
 
-    /**
-     * Close all persistence context object for specied onkects
-     * @param lo list of objects for context closing
-     */
     public static void shutdownEjbContext(Object... lo)
         throws  IllegalAccessException
     {
         Set<EntityManager> ems = new HashSet<>();
-        shutdownEjbContext(ems, lo);
+        Set<Object> processed = new HashSet<>();
+        shutdownEjbContextWorker(processed, ems, lo);
         Set<EntityManagerFactory> efs = new HashSet<>();
         for (EntityManager em:ems) {
             efs.add(em.getEntityManagerFactory());
@@ -106,7 +165,7 @@ public class Chigadziko {
         }
     }
 
-    private static void shutdownEjbContext(Set<EntityManager> ems, Object... lo)
+    private static void shutdownEjbContextWorker(Set<Object> processed, Set<EntityManager> ems, Object... lo)
         throws  IllegalAccessException
     {
         if (lo!=null) {
@@ -132,7 +191,11 @@ public class Chigadziko {
                             EJB co = (EJB) f.getAnnotation(EJB.class);
                             if (co != null) {
                                 f.setAccessible(true);
-                                shutdownEjbContext(ems, f.get(o));
+                                Object fo = f.get(o);
+                                if (!processed.contains((fo))) {
+                                    processed.add(fo);
+                                    shutdownEjbContextWorker(processed, ems, fo);
+                                }
                             }
                         }
                     }
@@ -140,5 +203,4 @@ public class Chigadziko {
             }
         }
     }
-
 }
