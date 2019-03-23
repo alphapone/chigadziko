@@ -17,58 +17,6 @@ import java.util.*;
  */
 public class Chigadziko {
 
-
-    /**
-     * Search all classes related with speicfied
-     * @param clazz
-     * @return
-     */
-    private static Set<Class> listUsable(Class clazz) {
-        Set<Class> retval = new HashSet<>();
-        fillClassTree(clazz, retval);
-        return retval;
-    }
-
-    /**
-     * Loads all clasess related with specified using recusrion with visited nodes checking
-     * @param clazz
-     * @param processed
-     */
-    private static void fillClassTree(Class clazz, Set<Class> processed) {
-        Set<Class> cls = new HashSet<>();
-        for (Field f: clazz.getDeclaredFields()) {
-            Class ft = f.getType();
-            cls.add(ft);
-            Type gt = f.getGenericType();
-            if(gt instanceof ParameterizedType){
-                ParameterizedType aType = (ParameterizedType) gt;
-                Type[] fieldArgTypes = aType.getActualTypeArguments();
-                for(Type fieldArgType : fieldArgTypes){
-                    if (fieldArgType.getTypeName()!=null) {
-                        try {
-                            cls.add(Class.forName(fieldArgType.getTypeName()));
-                        } catch (Exception e) {
-
-                        }
-                    }
-                }
-            }
-        }
-
-        for (Method m: clazz.getMethods()) {
-            cls.add(m.getReturnType());
-        }
-
-        for (Class dc:cls) {
-            if (dc!=null) {
-                if (!processed.contains(dc)) {
-                    processed.add(dc);
-                    fillClassTree(dc,processed);
-                }
-            }
-        }
-    }
-
     private static void makePersistenceContextWorker(Map<String,EntityManager> ems, Object... lo)
         throws IllegalAccessException
     {
