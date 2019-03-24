@@ -83,7 +83,7 @@ public class Chigadziko {
                             Object fo = cla.getConstructor().newInstance();
                             clm.put(cla,fo);
                             makeEjbContextWorker(clm,fo);
-                            makePersistenceContext(ems, fo);
+                            makePersistenceContextWorker(ems, fo);
                         }
                         f.set(o,clm.get(cla));
                     }
