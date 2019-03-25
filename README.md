@@ -34,7 +34,7 @@ Using Chigaziko you can work with EJB using methos of POJO.
 
 ## Why not Arquillian and similar suits?
 
-Arquillian is purposed to test full .ear application using jUnit. But testing of the application it is an integration test, ot unit test. If you need unit testing for your module you can not use Arquillian and similar tools.
+Arquillian is purposed to test full .ear application using jUnit. But testing of the application it is an integration test, not unit test. If you need unit testing for your module you can not use Arquillian and similar tools.
 But Chigadziko help make unit testing easy and transparent.
 
 
