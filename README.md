@@ -1,6 +1,6 @@
 # chigadziko
 
-Wildfly && jUnit is's very simple with chigadziko
+Wildfly && jUnit is very simple with chigadziko
 
 ## What is chigadziko?
 
