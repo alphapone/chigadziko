@@ -31,6 +31,8 @@ Using Chigaziko you can work with EJB using methos of POJO.
       // Here all EJB field are initialized, you can use and test them
       someClassManager.someVoid();
     }
+    
+ (*and don't forget do define all persistence context units for modules purposed to be tested in persistence.xml*)
 
 ## Why not Arquillian and similar suits?
 
