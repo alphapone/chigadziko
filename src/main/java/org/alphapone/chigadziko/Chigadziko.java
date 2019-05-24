@@ -44,7 +44,7 @@ public class Chigadziko {
     /**
      * Set up all @PersistenceContext properties of specified object list (faster than makeEjbContext)
      * @param lo
-     * @throws IllegalAccessException
+      ems, * @throws IllegalAccessException
      */
     public static void makePersistenceContext(Object... lo)
         throws IllegalAccessException
@@ -65,13 +65,12 @@ public class Chigadziko {
     public static void makeEjbContext(Object... lo)
         throws IllegalAccessException, InstantiationException, NoSuchMethodException, InvocationTargetException
     {
-        makeEjbContextWorker(new HashMap<>(), lo);
+        makeEjbContextWorker(new HashMap<>(), new HashMap<>(), lo);
     }
 
-    public static void makeEjbContextWorker(Map<Class,Object> clm, Object... lo)
+    public static void makeEjbContextWorker(Map<Class,Object> clm, Map<String,EntityManager> ems, Object... lo)
             throws IllegalAccessException, InstantiationException, NoSuchMethodException, InvocationTargetException
     {
-        Map<String,EntityManager> ems = new HashMap<>();
         for (Object o:lo) {
             for (Field f : o.getClass().getDeclaredFields()) {
                 EJB co = (EJB) f.getAnnotation(EJB.class);
@@ -82,7 +81,7 @@ public class Chigadziko {
                         if (!clm.containsKey(cla)) {
                             Object fo = cla.getConstructor().newInstance();
                             clm.put(cla,fo);
-                            makeEjbContextWorker(clm,fo);
+                            makeEjbContextWorker(clm, ems, fo);
                             makePersistenceContextWorker(ems, fo);
                         }
                         f.set(o,clm.get(cla));
